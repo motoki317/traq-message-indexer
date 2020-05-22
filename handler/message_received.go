@@ -44,6 +44,7 @@ func (h *handler) handleMessage(payload *traqbot.MessageCreatedPayload) {
 				if strings.ToLower(field) == prefix+command.name {
 					// Command match
 					h.handleCommand(payload, command, fields[i:])
+					return
 				}
 			}
 		}
