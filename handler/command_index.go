@@ -69,6 +69,7 @@ func commandIndex() command {
 					}
 					done++
 				}
+				finish <- true
 			}()
 
 			go func() {
