@@ -68,6 +68,8 @@ func commandIndex() command {
 						return
 					}
 					done++
+					// チャンネルごとに1秒ずつ待つ
+					<-time.NewTimer(time.Second * 1).C
 				}
 				finish <- true
 			}()

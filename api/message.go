@@ -9,10 +9,15 @@ import (
 
 const (
 	DefaultMessageLimit = 200
+	MaxMessageLength    = 10000
 )
 
 // POST /channels/:channelId/messages メッセージをチャンネルに投稿、embedを自動変換（embed=1）
 func PostMessage(channelId, content string) (*openapi.Message, error) {
+	if len(content) > MaxMessageLength {
+		content = content[:MaxMessageLength-3] + "..."
+	}
+
 	message, _, err := client.MessageApi.PostMessage(
 		auth,
 		channelId,
@@ -28,6 +33,10 @@ func PostMessage(channelId, content string) (*openapi.Message, error) {
 
 // PUT /messages/:messageId メッセージを編集
 func EditMessage(messageId, content string) (*openapi.Message, error) {
+	if len(content) > MaxMessageLength {
+		content = content[:MaxMessageLength-3] + "..."
+	}
+
 	message, _, err := client.MessageApi.EditMessage(
 		auth,
 		messageId,
