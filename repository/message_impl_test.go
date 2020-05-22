@@ -35,6 +35,7 @@ func TestRepositoryImpl_SearchMessage(t *testing.T) {
 		want    []Message
 		wantErr bool
 	}{
+		// Need to load some messages beforehand
 		{
 			name: "basic",
 			fields: fields{
@@ -45,6 +46,22 @@ func TestRepositoryImpl_SearchMessage(t *testing.T) {
 			args: args{
 				keywords:   []string{"じゃんけんしよう"},
 				channelIDs: nil,
+				limit:      5,
+				offset:     0,
+			},
+			want:    nil,
+			wantErr: false,
+		},
+		{
+			name: "channel filtering",
+			fields: fields{
+				db:          db,
+				lock:        sync.Mutex{},
+				channelLock: sync.Mutex{},
+			},
+			args: args{
+				keywords:   []string{"じゃんけんしよう"},
+				channelIDs: []string{"ec513c2c-b105-4a0e-8ccd-86b12ef307d8", "ec513c2c-b105-4a0e-8ccd-86b12ef307d8"},
 				limit:      5,
 				offset:     0,
 			},

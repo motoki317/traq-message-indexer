@@ -32,7 +32,10 @@ func (r *RepositoryImpl) SearchMessage(keywords []string, channelIDs []string, l
 	}
 	matchAgainst := strings.Join(keywords, " ")
 
-	channelIDRestrictions := strings.Repeat(" AND `channel_id` = ?", len(channelIDs))
+	var channelIDRestrictions string
+	if len(channelIDs) > 0 {
+		channelIDRestrictions = "AND (`channel_id` = ?" + strings.Repeat(" OR `channel_id` = ?", len(channelIDs)-1) + ")"
+	}
 
 	args := []interface{}{matchAgainst}
 	for _, id := range channelIDs {
@@ -61,7 +64,10 @@ func (r *RepositoryImpl) SearchMessageCount(keywords []string, channelIDs []stri
 	}
 	matchAgainst := strings.Join(keywords, " ")
 
-	channelIDRestrictions := strings.Repeat(" AND `channel_id` = ?", len(channelIDs))
+	var channelIDRestrictions string
+	if len(channelIDs) > 0 {
+		channelIDRestrictions = "AND (`channel_id` = ?" + strings.Repeat(" OR `channel_id` = ?", len(channelIDs)-1) + ")"
+	}
 
 	args := []interface{}{matchAgainst}
 	for _, id := range channelIDs {
