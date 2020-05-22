@@ -28,6 +28,9 @@ func (r *RepositoryImpl) SearchMessage(keywords []string, channelIDs []string, l
 	}
 
 	for i, keyword := range keywords {
+		if strings.HasPrefix(keyword, "+") || strings.HasPrefix(keyword, "-") {
+			continue
+		}
 		keywords[i] = "+" + keyword
 	}
 	matchAgainst := strings.Join(keywords, " ")
@@ -60,6 +63,9 @@ func (r *RepositoryImpl) SearchMessageCount(keywords []string, channelIDs []stri
 	}
 
 	for i, keyword := range keywords {
+		if strings.HasPrefix(keyword, "+") || strings.HasPrefix(keyword, "-") {
+			continue
+		}
 		keywords[i] = "+" + keyword
 	}
 	matchAgainst := strings.Join(keywords, " ")
