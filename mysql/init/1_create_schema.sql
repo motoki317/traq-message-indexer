@@ -1,8 +1,12 @@
 # Install Mroonga, CJK-ready fulltext engine
 INSTALL SONAME 'ha_mroonga';
+DROP FUNCTION IF EXISTS last_insert_grn_id;
 CREATE FUNCTION last_insert_grn_id RETURNS INTEGER SONAME 'ha_mroonga.so';
+DROP FUNCTION IF EXISTS mroonga_snippet;
 CREATE FUNCTION mroonga_snippet RETURNS STRING SONAME 'ha_mroonga.so';
+DROP FUNCTION IF EXISTS mroonga_command;
 CREATE FUNCTION mroonga_command RETURNS STRING SONAME 'ha_mroonga.so';
+DROP FUNCTION IF EXISTS mroonga_escape;
 CREATE FUNCTION mroonga_escape RETURNS STRING SONAME 'ha_mroonga.so';
 
 CREATE TABLE IF NOT EXISTS `message` (
