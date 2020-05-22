@@ -74,7 +74,7 @@ func commandSearch() command {
 			if err != nil {
 				return err
 			}
-			messages, err := h.repo.SearchMessage(keywords, channelIDs, messagesPerPage, messagesPerPage*5)
+			messages, err := h.repo.SearchMessage(keywords, channelIDs, messagesPerPage, page*messagesPerPage)
 			if err != nil {
 				return err
 			}
