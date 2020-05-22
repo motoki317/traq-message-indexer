@@ -118,7 +118,7 @@ func commandSearch() command {
 					"\n"+
 					"%s\n"+
 					"\n"+
-					"*Page %v of %v, showing %v ~ %v of %v results",
+					"*Page %v of %v, showing %v ~ %v of %v results*",
 				strings.Join(formatted, "\n"),
 				page+1, maxPage+1, page*messagesPerPage+1, page*messagesPerPage+len(messages),
 				count,
