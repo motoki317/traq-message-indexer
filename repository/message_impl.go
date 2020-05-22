@@ -69,7 +69,7 @@ func (r *RepositoryImpl) SearchMessageCount(keywords []string, channelIDs []stri
 	}
 
 	var count int
-	if err := r.db.Select(&count, "SELECT COUNT(*) FROM `message` WHERE MATCH (`text`) AGAINST (? IN BOOLEAN MODE)"+channelIDRestrictions, args...); err != nil && err == sql.ErrNoRows {
+	if err := r.db.Get(&count, "SELECT COUNT(*) FROM `message` WHERE MATCH (`text`) AGAINST (? IN BOOLEAN MODE)"+channelIDRestrictions, args...); err != nil && err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
 		return 0, err
