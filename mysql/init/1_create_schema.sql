@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS `message` (
     `id` CHAR(36) NOT NULL,
     `channel_id` CHAR(36) NOT NULL,
     `created_at` DATETIME(6) NOT NULL,
-    `text` TEXT CHARSET `utf8mb4` COLLATE `utf8mb4_bin` NOT NULL,
+    `text` TEXT CHARSET `utf8mb4` COLLATE `utf8mb4_general_ci` NOT NULL,
     FULLTEXT KEY `full_text` (`text`)
 ) ENGINE=Mroonga DEFAULT CHARSET=utf8mb4;
 
