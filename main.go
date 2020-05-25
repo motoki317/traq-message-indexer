@@ -72,7 +72,15 @@ func main() {
 
 	// traq bot handlers
 	handlers := bot.EventHandlers{}
-	handlers.SetMessageCreatedHandler(handler.MessageReceived(repo))
+	f := handler.MessageReceived(repo)
+	handlers.SetMessageCreatedHandler(f)
+	handlers.SetDirectMessageCreatedHandler(func(payload *bot.DirectMessageCreatedPayload) {
+		converted := &bot.MessageCreatedPayload{
+			BasePayload: payload.BasePayload,
+			Message:     payload.Message,
+		}
+		f(converted)
+	})
 
 	// traq bot server
 	vt := os.Getenv("VERIFICATION_TOKEN")
