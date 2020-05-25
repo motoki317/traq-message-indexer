@@ -182,7 +182,7 @@ func commandSearch() command {
 		help: strings.Join([]string{
 			"## Search Command Help",
 			"Searches through messages.",
-			"Syntax: `/search <keywords> [#channel filter] [-c|--children] [-r|--recursive] [-p|--page #]`",
+			"Syntax: `/search <keywords> [#channel filter] [-c|--children] [-r|--recursive] [-p|--page #] [@username] [from:username] [after:date] [before:date]`",
 			"",
 			"### Specify keywords",
 			"Specify keywords using the following syntax ('IN BOOLEAN MODE'): https://mariadb.com/kb/en/full-text-index-overview/#in-boolean-mode",
