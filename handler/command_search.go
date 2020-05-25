@@ -5,6 +5,7 @@ import (
 	"github.com/motoki317/traq-bot"
 	"github.com/motoki317/traq-message-indexer/api"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -115,6 +116,66 @@ func extractUserIDs(payload *traqbot.MessageCreatedPayload, args []string) []str
 	return userIDs
 }
 
+type format struct {
+	re     *regexp.Regexp
+	layout string
+}
+
+var formats = []format{
+	{
+		re:     regexp.MustCompile("\\d{4}/\\d{2}/\\d{2} \\d{1,2}:\\d{2}:\\d{2}"),
+		layout: "2006/01/02 15:04:05 +0900",
+	},
+	{
+		re:     regexp.MustCompile("\\d{4}-\\d{2}-\\d{2} \\d{1,2}:\\d{2}:\\d{2}"),
+		layout: "2006-01-02 15:04:05 +0900",
+	},
+	{
+		re:     regexp.MustCompile("\\d{4}/\\d{2}/\\d{2} \\d{1,2}:\\d{2}"),
+		layout: "2006/01/02 15:04 +0900",
+	},
+	{
+		re:     regexp.MustCompile("\\d{4}-\\d{2}-\\d{2} \\d{1,2}:\\d{2}"),
+		layout: "2006-01-02 15:04 +0900",
+	},
+	{
+		re:     regexp.MustCompile("\\d{4}/\\d{2}/\\d{2}"),
+		layout: "2006/01/02 +0900",
+	},
+	{
+		re:     regexp.MustCompile("\\d{4}-\\d{2}-\\d{2}"),
+		layout: "2006-01-02 +0900",
+	},
+}
+
+func parseTime(s string) (t time.Time, ok bool) {
+	for _, f := range formats {
+		if matched := f.re.FindString(s); matched != "" {
+			if t, err := time.Parse(f.layout, matched+" +0900"); err == nil {
+				return t, true
+			}
+		}
+	}
+	return time.Time{}, false
+}
+
+func extractTimeRange(args []string) (after, before *time.Time) {
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "after:") {
+			if t, ok := parseTime(arg[len("after:"):]); ok {
+				t = t.In(time.UTC)
+				after = &t
+			}
+		} else if strings.HasPrefix(arg, "before:") {
+			if t, ok := parseTime(arg[len("before:"):]); ok {
+				t = t.In(time.UTC)
+				before = &t
+			}
+		}
+	}
+	return
+}
+
 func commandSearch() command {
 	return command{
 		name: "search",
@@ -138,12 +199,18 @@ func commandSearch() command {
 			"Filter by users by mentioning them, or using syntax `from:<user id>`.",
 			"- /search おいす @toki",
 			"- /search おいす from:kashiwade from:liquid1224",
+			"",
+			"### Filter by time",
+			"Filter by time using syntax `after:<time>` and/or `before:<time>`.",
+			"- /search おいす before:2020/01/01",
+			"- /search 講習会 after:2020/04/01 07:00:00",
 		}, "\n"),
 		handle: func(h *handler, payload *traqbot.MessageCreatedPayload, args []string) error {
 			keywords := extractKeywords(args[1:])
 			page := extractPage(args[1:])
 			channelIDs := extractChannelIDs(payload, args[1:])
 			userIDs := extractUserIDs(payload, args[1:])
+			after, before := extractTimeRange(args[1:])
 
 			channels, err := api.GetChannels(false, true)
 			if err != nil {
@@ -169,11 +236,11 @@ func commandSearch() command {
 				return nil
 			}
 
-			count, err := h.repo.SearchMessageCount(keywords, channelIDs, userIDs)
+			count, err := h.repo.SearchMessageCount(keywords, channelIDs, userIDs, after, before)
 			if err != nil {
 				return err
 			}
-			messages, err := h.repo.SearchMessage(keywords, channelIDs, userIDs, messagesPerPage, page*messagesPerPage)
+			messages, err := h.repo.SearchMessage(keywords, channelIDs, userIDs, after, before, messagesPerPage, page*messagesPerPage)
 			if err != nil {
 				return err
 			}

@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"strings"
+	"time"
 )
 
 func (r *RepositoryImpl) CreateMessage(message *Message) error {
@@ -31,7 +32,7 @@ func nCopies(s string, n int) []string {
 }
 
 // buildSearchMessageQuery builds a partial query ('WHERE' clause) for searching message.
-func (r *RepositoryImpl) buildSearchMessageQuery(keywords []string, channelIDs []string, userIDs []string) (string, []interface{}) {
+func (r *RepositoryImpl) buildSearchMessageQuery(keywords, channelIDs, userIDs []string, after, before *time.Time) (string, []interface{}) {
 	ands := make([]string, 0)
 	args := make([]interface{}, 0)
 
@@ -56,6 +57,15 @@ func (r *RepositoryImpl) buildSearchMessageQuery(keywords []string, channelIDs [
 		}
 	}
 
+	if after != nil {
+		ands = append(ands, "`created_at` > ?")
+		args = append(args, after.Format("2006-01-02 15:04:05"))
+	}
+	if before != nil {
+		ands = append(ands, "`created_at` < ?")
+		args = append(args, before.Format("2006-01-02 15:04:05"))
+	}
+
 	// No 'WHERE' clause
 	if len(ands) == 0 {
 		return "", args
@@ -64,8 +74,8 @@ func (r *RepositoryImpl) buildSearchMessageQuery(keywords []string, channelIDs [
 	return "WHERE " + strings.Join(ands, " AND "), args
 }
 
-func (r *RepositoryImpl) SearchMessage(keywords, channelIDs, userIDs []string, limit, offset int) ([]Message, error) {
-	where, args := r.buildSearchMessageQuery(keywords, channelIDs, userIDs)
+func (r *RepositoryImpl) SearchMessage(keywords, channelIDs, userIDs []string, after, before *time.Time, limit, offset int) ([]Message, error) {
+	where, args := r.buildSearchMessageQuery(keywords, channelIDs, userIDs, after, before)
 
 	args = append(args, limit)
 	args = append(args, offset)
@@ -80,8 +90,8 @@ func (r *RepositoryImpl) SearchMessage(keywords, channelIDs, userIDs []string, l
 	}
 }
 
-func (r *RepositoryImpl) SearchMessageCount(keywords, channelIDs, userIDs []string) (int, error) {
-	where, args := r.buildSearchMessageQuery(keywords, channelIDs, userIDs)
+func (r *RepositoryImpl) SearchMessageCount(keywords, channelIDs, userIDs []string, after, before *time.Time) (int, error) {
+	where, args := r.buildSearchMessageQuery(keywords, channelIDs, userIDs, after, before)
 
 	var count int
 	if err := r.db.Get(&count, "SELECT COUNT(*) FROM `message` "+where, args...); err != nil && err == sql.ErrNoRows {

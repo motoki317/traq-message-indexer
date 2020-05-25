@@ -15,8 +15,8 @@ type MessageRepository interface {
 	CreateMessage(*Message) error
 	// メッセージをIDで取得します。
 	GetMessage(messageID string) (*Message, error)
-	// キーワードと指定されたチャンネルIDからメッセージを検索します。
-	SearchMessage(keywords, channelIDs, userIDs []string, limit, offset int) ([]Message, error)
-	// キーワードと指定されたチャンネルIDから検索されるメッセージの総数を返します。
-	SearchMessageCount(keywords, channelIDs, userIDs []string) (int, error)
+	// メッセージを検索します。
+	SearchMessage(keywords, channelIDs, userIDs []string, after, before *time.Time, limit, offset int) ([]Message, error)
+	// 検索結果のメッセージの総数を返します。
+	SearchMessageCount(keywords, channelIDs, userIDs []string, after, before *time.Time) (int, error)
 }
