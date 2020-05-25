@@ -12,39 +12,138 @@ import (
 
 const messagesPerPage = 5
 
+// extractKeywords scans arguments and extracts valid keywords.
+func extractKeywords(args []string) []string {
+	keywords := make([]string, 0)
+
+	skipNext := false
+	for _, arg := range args {
+		if skipNext {
+			skipNext = false
+			continue
+		}
+
+		if arg == "-p" || arg == "--page" {
+			// page
+			skipNext = true
+			continue
+		} else if strings.HasPrefix(arg, "-") {
+			// special args
+			continue
+		} else if arg == "this" || strings.HasPrefix(arg, "#") {
+			// channel
+			continue
+		} else if strings.HasPrefix(arg, "@") || strings.HasPrefix(arg, "from:") {
+			// user
+			continue
+		}
+
+		keywords = append(keywords, arg)
+	}
+
+	return keywords
+}
+
+// extractPage scans arguments (expects to be written in 1-indexed number), and returns 0-indexed page number if exists.
+func extractPage(args []string) int {
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == "-p" || args[i] == "--page" {
+			if page, err := strconv.Atoi(args[i+1]); err == nil {
+				// from 1-indexed page to 0-indexed page
+				return page - 1
+			}
+		}
+	}
+	return 0
+}
+
+// extractChannelIDs extracts mentioned channels from the message payload, and returns channel ids slice.
+func extractChannelIDs(payload *traqbot.MessageCreatedPayload, args []string) []string {
+	includesThis := false
+	for _, arg := range args {
+		if strings.ToLower(arg) == "this" {
+			includesThis = true
+		}
+	}
+
+	channelIDs := make([]string, 0)
+	if includesThis {
+		channelIDs = append(channelIDs, payload.Message.ChannelID)
+	}
+
+	// Check embedded channel links
+	for _, e := range payload.Message.Embedded {
+		if e.Type == "channel" {
+			channelIDs = append(channelIDs, e.ID)
+		}
+	}
+
+	return channelIDs
+}
+
+// extractUserIDs extract user IDs from the message.
+func extractUserIDs(payload *traqbot.MessageCreatedPayload, args []string) []string {
+	userIDs := make([]string, 0)
+
+	for _, e := range payload.Message.Embedded {
+		if e.Type == "user" {
+			userIDs = append(userIDs, e.ID)
+		}
+	}
+
+	from := make([]string, 0)
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "from:") {
+			from = append(from, arg[len("from:"):])
+		}
+	}
+
+	// If specified by user name, request the API
+	if len(from) > 0 {
+		users, err := api.GetNameUserMap(true, true)
+		if err == nil {
+			for _, name := range from {
+				if user, ok := users[name]; ok {
+					userIDs = append(userIDs, user.Id)
+				}
+			}
+		} else {
+			log.Printf("an error occurred while requesting users: %s\n", err)
+		}
+	}
+
+	return userIDs
+}
+
 func commandSearch() command {
 	return command{
 		name: "search",
-		help: "Searches through messages.\n" +
-			"Syntax: `/search <keywords> [#channel filter] [-c|--children] [-r|--recursive] [-p|--page #]`\n" +
-			"Examples:\n" +
-			"- `/search じゃんけん`\n" +
-			"- `/search じゃんけん #gps/times/kashiwade`\n" +
-			"- `/search おいすー #gps/times --children --recursive --page 2`",
+		help: strings.Join([]string{
+			"## Search Command Help",
+			"Searches through messages.",
+			"Syntax: `/search <keywords> [#channel filter] [-c|--children] [-r|--recursive] [-p|--page #]`",
+			"",
+			"### Specify keywords",
+			"Specify keywords using the following syntax ('IN BOOLEAN MODE'): https://mariadb.com/kb/en/full-text-index-overview/#in-boolean-mode",
+			"The search is case-insensitive.",
+			"- /search じゃんけん",
+			"",
+			"### Filter by channels",
+			"Filter by channels by mentioning channels. Append '--children' (and '--recursive') argument(s) to instead specify its child channels.",
+			"- /search 講習会 #general",
+			"- /search おいす #gps/times --children --recursive",
+			"    - Recursively searches channels under #gps/times, but NOT including #gps/times.",
+			"",
+			"### Filter by users",
+			"Filter by users by mentioning them, or using syntax `from:<user id>`.",
+			"- /search おいす @toki",
+			"- /search おいす from:kashiwade from:liquid1224",
+		}, "\n"),
 		handle: func(h *handler, payload *traqbot.MessageCreatedPayload, args []string) error {
-			keywords := make([]string, 0)
-			page := 0
-			// parse args to extract keywords
-			for i := 1; i < len(args); i++ {
-				if args[i] == "-p" || args[i] == "--page" {
-					i++
-					// parse page
-					if i < len(args) {
-						if parsed, err := strconv.Atoi(args[i]); err == nil {
-							// to 0-indexed
-							page = parsed - 1
-						}
-					}
-					continue
-				} else if strings.HasPrefix(args[i], "-") {
-					continue
-				} else if args[i] == "this" || strings.HasPrefix(args[i], "#") {
-					continue
-				}
-				keywords = append(keywords, args[i])
-			}
-
-			channelIDs := extractMentionedChannels(payload)
+			keywords := extractKeywords(args[1:])
+			page := extractPage(args[1:])
+			channelIDs := extractChannelIDs(payload, args[1:])
+			userIDs := extractUserIDs(payload, args[1:])
 
 			channels, err := api.GetChannels(false, true)
 			if err != nil {
@@ -70,11 +169,11 @@ func commandSearch() command {
 				return nil
 			}
 
-			count, err := h.repo.SearchMessageCount(keywords, channelIDs)
+			count, err := h.repo.SearchMessageCount(keywords, channelIDs, userIDs)
 			if err != nil {
 				return err
 			}
-			messages, err := h.repo.SearchMessage(keywords, channelIDs, messagesPerPage, page*messagesPerPage)
+			messages, err := h.repo.SearchMessage(keywords, channelIDs, userIDs, messagesPerPage, page*messagesPerPage)
 			if err != nil {
 				return err
 			}

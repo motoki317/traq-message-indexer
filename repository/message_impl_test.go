@@ -25,6 +25,7 @@ func TestRepositoryImpl_SearchMessage(t *testing.T) {
 	type args struct {
 		keywords   []string
 		channelIDs []string
+		userIDs    []string
 		limit      int
 		offset     int
 	}
@@ -46,6 +47,7 @@ func TestRepositoryImpl_SearchMessage(t *testing.T) {
 			args: args{
 				keywords:   []string{"じゃんけんしよう"},
 				channelIDs: nil,
+				userIDs:    nil,
 				limit:      5,
 				offset:     0,
 			},
@@ -62,6 +64,24 @@ func TestRepositoryImpl_SearchMessage(t *testing.T) {
 			args: args{
 				keywords:   []string{"じゃんけんしよう"},
 				channelIDs: []string{"ec513c2c-b105-4a0e-8ccd-86b12ef307d8", "ec513c2c-b105-4a0e-8ccd-86b12ef307d8"},
+				userIDs:    nil,
+				limit:      5,
+				offset:     0,
+			},
+			want:    nil,
+			wantErr: false,
+		},
+		{
+			name: "user filtering",
+			fields: fields{
+				db:          db,
+				lock:        sync.Mutex{},
+				channelLock: sync.Mutex{},
+			},
+			args: args{
+				keywords:   []string{"じゃんけんしよう"},
+				channelIDs: nil,
+				userIDs:    []string{"fffbbced-0fe6-4d48-b5ad-5ba607e6d74e"},
 				limit:      5,
 				offset:     0,
 			},
@@ -76,7 +96,7 @@ func TestRepositoryImpl_SearchMessage(t *testing.T) {
 				lock:        tt.fields.lock,
 				channelLock: tt.fields.channelLock,
 			}
-			got, err := r.SearchMessage(tt.args.keywords, tt.args.channelIDs, tt.args.limit, tt.args.offset)
+			got, err := r.SearchMessage(tt.args.keywords, tt.args.channelIDs, tt.args.userIDs, tt.args.limit, tt.args.offset)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SearchMessage() error = %v, wantErr %v", err, tt.wantErr)
 				return

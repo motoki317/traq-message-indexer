@@ -20,7 +20,7 @@ func commandIndex() command {
 			"- `/index #gps/times --children`\n" +
 			"- `/index #gps/times --children --recursive`",
 		handle: func(h *handler, payload *traqbot.MessageCreatedPayload, args []string) error {
-			channelIDs := extractMentionedChannels(payload)
+			channelIDs := extractChannelIDs(payload, args[1:])
 
 			channels, err := api.GetChannels(false, false)
 			if err != nil {

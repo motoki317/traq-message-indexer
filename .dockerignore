@@ -1,0 +1,9 @@
+.idea/
+mysql/data/
+mysql/docker/
+mysql/mariadb.conf.d/
+
+.env
+.gitignore
+docker-compose.yml
+Dockerfile

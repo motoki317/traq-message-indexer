@@ -49,6 +49,7 @@ func (h *handler) updateChannel(channelID string) error {
 			err := h.repo.CreateMessage(&repository.Message{
 				ID:        message.Id,
 				ChannelID: message.ChannelId,
+				UserID:    message.UserId,
 				CreatedAt: message.CreatedAt,
 				Text:      message.Content,
 			})

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	traqbot "github.com/motoki317/traq-bot"
 	"github.com/motoki317/traq-message-indexer/api"
 	traqApi "github.com/sapphi-red/go-traq"
 	"strings"
@@ -14,32 +13,6 @@ func makeArgMap(args []string) (ret map[string]bool) {
 		ret[strings.ToLower(v)] = true
 	}
 	return
-}
-
-// extractMentionedChannel extracts mentioned channels from the message payload, and returns channel ids slice.
-func extractMentionedChannels(payload *traqbot.MessageCreatedPayload) []string {
-	// Check "this" argument"
-	fields := strings.Fields(payload.Message.PlainText)
-	includesThis := false
-	for _, f := range fields {
-		if strings.ToLower(f) == "this" {
-			includesThis = true
-		}
-	}
-
-	ret := make([]string, 0)
-	if includesThis {
-		ret = append(ret, payload.Message.ChannelID)
-	}
-
-	// Check embedded channel links
-	for _, e := range payload.Message.Embedded {
-		if e.Type == "channel" {
-			ret = append(ret, e.ID)
-		}
-	}
-
-	return ret
 }
 
 // getChildChannels returns a list of child channel IDs. Does not include the parent.
