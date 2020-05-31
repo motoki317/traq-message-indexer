@@ -37,6 +37,9 @@ func extractKeywords(args []string) []string {
 		} else if strings.HasPrefix(arg, "@") || strings.HasPrefix(arg, "from:") {
 			// user
 			continue
+		} else if strings.HasPrefix(arg, "before:") || strings.HasPrefix(arg, "after:") {
+			// time range
+			continue
 		}
 
 		keywords = append(keywords, arg)
@@ -227,13 +230,6 @@ func commandSearch() command {
 					childIDs = append(childIDs, getChildChannels(id, channels, recursive)...)
 				}
 				channelIDs = childIDs
-			}
-
-			if len(keywords) == 0 {
-				if _, err := api.PostMessage(payload.Message.ChannelID, "Please specify at least one keyword!"); err != nil {
-					log.Println(err)
-				}
-				return nil
 			}
 
 			count, err := h.repo.SearchMessageCount(keywords, channelIDs, userIDs, after, before)
