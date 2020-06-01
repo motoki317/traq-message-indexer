@@ -5,6 +5,7 @@ import (
 	"github.com/motoki317/traq-bot"
 	"github.com/motoki317/traq-message-indexer/api"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,6 +13,10 @@ import (
 )
 
 const messagesPerPage = 5
+
+var (
+	botUserId = os.Getenv("BOT_USER_ID")
+)
 
 // extractKeywords scans arguments and extracts valid keywords.
 func extractKeywords(args []string) []string {
@@ -91,6 +96,9 @@ func extractUserIDs(payload *traqbot.MessageCreatedPayload, args []string) []str
 
 	for _, e := range payload.Message.Embedded {
 		if e.Type == "user" {
+			if e.ID == botUserId {
+				continue
+			}
 			userIDs = append(userIDs, e.ID)
 		}
 	}

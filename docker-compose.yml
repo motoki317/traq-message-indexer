@@ -8,6 +8,7 @@ services:
       PORT: 80
       VERIFICATION_TOKEN:
       ACCESS_TOKEN:
+      BOT_USER_ID:
       MARIADB_HOSTNAME: mysql
       MARIADB_DATABASE: traq
       MARIADB_USERNAME: root
