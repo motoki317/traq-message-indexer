@@ -2,7 +2,7 @@ FROM golang:1.15.3 AS build
 
 WORKDIR /go/src/github.com/motoki317/traq-message-indexer
 
-COPY ./go.* .
+COPY ./go.* ./
 RUN go mod download
 
 COPY . .
