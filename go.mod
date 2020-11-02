@@ -1,6 +1,6 @@
 module github.com/motoki317/traq-message-indexer
 
-go 1.14
+go 1.15
 
 require (
 	github.com/antihax/optional v1.0.0
