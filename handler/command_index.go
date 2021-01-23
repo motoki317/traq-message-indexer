@@ -18,7 +18,8 @@ func commandIndex() command {
 			"- `/index this`\n" +
 			"- `/index #gps/times/Yataka_ML`\n" +
 			"- `/index #gps/times --children`\n" +
-			"- `/index #gps/times --children --recursive`",
+			"- `/index #gps/times --children --recursive`\n" +
+			"- `/index all` ... indexes ALL public channels, be careful!",
 		handle: func(h *handler, payload *traqbot.MessageCreatedPayload, args []string) error {
 			channelIDs := extractChannelIDs(payload, args[1:])
 
@@ -29,14 +30,22 @@ func commandIndex() command {
 
 			// Parse args and extract channel IDs
 			argMap := makeArgMap(args)
-			getChild := argMap["-c"] || argMap["--children"]
-			recursive := argMap["-r"] || argMap["--recursive"]
-			if getChild {
-				childIDs := make([]string, 0)
-				for _, id := range channelIDs {
-					childIDs = append(childIDs, getChildChannels(id, channels, recursive)...)
+			getAll := argMap["all"]
+			if getAll {
+				channelIDs = make([]string, 0, len(channels.Public))
+				for _, ch := range channels.Public {
+					channelIDs = append(channelIDs, ch.Id)
 				}
-				channelIDs = childIDs
+			} else {
+				getChild := argMap["-c"] || argMap["--children"]
+				recursive := argMap["-r"] || argMap["--recursive"]
+				if getChild {
+					childIDs := make([]string, 0)
+					for _, id := range channelIDs {
+						childIDs = append(childIDs, getChildChannels(id, channels, recursive)...)
+					}
+					channelIDs = childIDs
+				}
 			}
 
 			// Send message
